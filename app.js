@@ -12,10 +12,15 @@ var app = require('express').createServer()
 // Parse le JSON 
 // @@ Mettre le nom du fichier en arg de la fonction
 function parseJSON () {
-	var data = fs.readFileSync('task.json');
-	console.log("data "+data);		
+	var data = fs.readFile('task.json', onReadFile);
+	
+	function onReadFile(err, data) {
+		if (err) return onError(err);
+	console.log("data "+ data);		
 	var list = JSON.parse(data);
 	return list;
+	}
+	
 }
 
 // Port d'écoute du serv
