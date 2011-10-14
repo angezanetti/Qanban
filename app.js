@@ -1,18 +1,16 @@
 /*
-
 Server code for Qanban
 
-AngeZanetti - 2011
+AngeZanetti- 2011
 
 */
-
 // import modules
 var fs = require('fs');
 var app = require('express').createServer();
-var  io = require('socket.io').listen(app);
+var io = require('socket.io').listen(app);
 
-var task = {}; // liste des taches en cours
-	
+var task; // liste des taches en cours
+var jsonString; 	
 // Parse the JSON 
 var parseJSON = function (jsonFile,callback) {
 	var data = fs.readFile(jsonFile, onReadFile);
@@ -21,8 +19,8 @@ var parseJSON = function (jsonFile,callback) {
 	list = JSON.parse(data);
 	callback(list);
 	}
-	
 }
+// Ecrit le JSON
 var ecritJSON = function(jsonFile, newtask, callback) {
 	fs.writeFile(jsonFile, newtask, function (err) {
 	  if (err) throw err;
@@ -30,47 +28,81 @@ var ecritJSON = function(jsonFile, newtask, callback) {
 	});
 	
 }
+//Rajoute une valeur au tableau des taches
+var addObj = function (obj, data, callback) {
+    if (data.posx<300) { console.log('pushtodo');
+        obj.todo.push({"id":data.id, "title":data.title, "text":data.text});
+    }	
+    if (data.posx >300 && data.posx < 700) {console.log('pushdoing'); 
+        obj.doing.push({"id":data.id,"title":data.title, "text":data.text});
+    }
+    if (data.posx > 700) { console.log('oushdone');
+        obj.done.push({"id":data.id,"title":data.title, "text":data.text});
+    } 
+    return obj;
+} 
+// Nettoie le tableau des anciennes valeurs
+var cleanItUp = function(myObj,data,callback) {
+    var tabtodo = myObj.todo;
+    var tabdoing = myObj.doing;
+    var tabdone = myObj.done;
+        for( var i=0; i<tabtodo.length; i++) { 
+             if(tabtodo[i].id == data.id) {
+console.log('vire todo');     
+                tabtodo.splice(i,1);
+                console.log(tabtodo);
+                myObj.todo = tabtodo;
+            }
+        }
+        for( var i=0; i<tabdone.length; i++) {      
+            if(tabdone[i].id == data.id) {
+console.log('vire done');     
+                tabdone.splice(i,1);
+                myObj.done = tabdone;
+            }
+        }
+        for(var i=0; i<tabdoing.length; i++) {      
+            if(tabdoing[i].id == data.id) {
+console.log('vire doin');     
+                tabdoing.splice(i,1);
+                myObj.doing = tabdoing;
+            }
+        }
+        return myObj;   
+}
 // Setup the server with Express 
 app.listen(300);
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
 
-
 parseJSON('task.json',function(list) {
 	task = list;
-	console.log(task.todo.length);
 });
 
 // Open the websocket connection 
 io.sockets.on('connection', function (socket) {	
   	// Envoi le JSON à la creation de la page
-	//socket.emit('task', list);
-	
-	// Recoit les données position & texte du client
+	socket.emit('task',task);
+    // REcoit les donnée des nouvelles tâches
+    socket.on('newTask', function (data) {
+        task = addObj(task,data);
+console.log('newtaskdata');console.log(data);
+     //   var jsonString = JSON.stringify(task); 
+        ecritJSON('task2.json', jsonString);
+    console.log('ecrit');
+        socket.emit('task',task);
+    });
+	// Recoit les données position & texte du client qd on change la pos
   	socket.on('change', function (data) {
-		if (data.posx < 300) {
-			if (task.todo.indexOf(data.title) != -1) {
-				task.todo.push({"title": data.title, "text":data.text});
-				console.log(task);
-				var jsonString = JSON.stringify(task); 
-				ecritJSON('task2.json', jsonString);
-			}
-		}else if (data.posx < 700) {
-			if (task.doing.indexOf(data.title) != -1) {
-				task.doing.push({"title": data.title, "text":data.text});
-				console.log(task);
-				var jsonString = JSON.stringify(task);
-				ecritJSON('task2.json', jsonString);
-			}
-		}else {
-			if (task.doing.indexOf(data.title) != -1) {
-				task.done.push({"title": data.title, "text":data.text});
-				console.log(task);
-				var jsonString = JSON.stringify(task);
-				ecritJSON('task2.json', jsonString);
-			}
-		}
-				
-   	});
+    // On vire l'ancinne version du tableau
+    console.log('changedata');console.log(data);
+    task = cleanItUp(task, data);
+    task = addObj(task,data);
+    jsonString = JSON.stringify(task); 
+    //ecritJSON('task2.json', jsonString);
+    socket.emit('task',task);
+   	}); 
+    ecritJSON('task2.json', jsonString);
+console.log('ecrit');
 });

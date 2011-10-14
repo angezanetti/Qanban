@@ -3,49 +3,64 @@
 <head>
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 	<link type="text/css" href="http://mutualab.org/Qanban/lib/css/ui-lightness/jquery-ui-1.8.16.custom.css" rel="Stylesheet" />
-	<style>
-	#todo, #doing, #done{ width: 300px; float: left; padding: 0 30px; border-right: 1px solid #000; height: 100%; }
-	.portlet { margin: 0 1em 1em 0; }
-	.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; }
-	.portlet-header .ui-icon { float: right; }
-	.portlet-content { padding: 0.4em; }
-	.ui-sortable-placeholder { border: 1px dotted black; visibility: visible !important; height: 50px !important; }
-	.ui-sortable-placeholder * { visibility: hidden; }
-	label, input { display:block }
-	input.text { margin-bottom:12px; width:95%; padding: .4em; }
-	fieldset { padding:0; border:0; margin-top:25px; }
-	h1 { font-size: 1.2em; margin: .6em 0; }
-	div#users-contain { width: 350px; margin: 20px 0; }
-	div#users-contain table { margin: 1em 0; border-collapse: collapse; width: 100%; }
-	div#users-contain table td, div#users-contain table th { border: 1px solid #eee; padding: .6em 10px; text-align: left; }
-	.ui-dialog .ui-state-error { padding: .3em; }
-	.validateTips { border: 1px solid transparent; padding: 0.3em; }
-	</style>	
+	<link type="text/css" href="http://mutualab.org/Qanban/style.css" rel="Stylesheet" />
 	<script type="text/javascript" src="http://mutualab.org/Qanban/lib/js/jquery-1.6.2.min.js"></script>
 	<script type="text/javascript" src="http://mutualab.org/Qanban/lib/js/jquery-ui-1.8.16.custom.min.js"></script>
-	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
-	
-	
+	<script type="text/javascript" src="http://mutualab.org:300/socket.io/socket.io.js"></script>
 	<script>
 	// Mise en place des sockets IO
 	var socket = io.connect('http://mutualab.org');
-	var json;
-	
-	// Recoit les données du serv pour la liste des taches
+	var fileData;
+    var idx=1;
+    // Recoit les données du serv pour la liste des taches
   	socket.on('task', function (data) {
-		json = data;
-		console.log("test TODO "+json.todo.portlet.name);
-  	});
-
+        console.log('recoit');console.log(data);
+        $('.portlet').remove();
+		if(data.todo.length != 0) {
+console.log('construit todo');
+            for ( i=0; i< data.todo.length;i++) {
+		         $( "#todo" ).append( "<div class='portlet ui-widget ui-widget-content ui-helper-clearfix ui-corner-all'>" + 
+			    "<div class='taskTitle ui-widget-header ui-corner-all'>" +data.todo[i].title + "</div>" + 
+			    "<div class='portlet-content'>" + data.todo[i].text + "</div>" + 
+			    "<div class='id'>" + data.todo[i].id + "</div>" + 
+	   		    "</div>" );
+                idx = idx+i;
+             }
+        }
+		if(data.doing.length != 0) {
+console.log('construit doin');
+            for ( i=0; i< data.doing.length;i++) {
+                console.log("data"+i);
+		         $( "#doing" ).append( "<div class='portlet ui-widget ui-widget-content ui-helper-clearfix ui-corner-all'>" + 
+			    "<div class='taskTitle ui-widget-header ui-corner-all'>" +data.doing[i].title + "</div>" + 
+			    "<div class='portlet-content'>" + data.doing[i].text + "</div>" + 
+			    "<div class='id'>" + data.doing[i].id + "</div>" + 
+	   		    "</div>" );
+                idx = idx+i;
+             }
+        }
+		if(data.done.length != 0) {
+console.log('construit done');
+            for ( i=0; i< data.done.length;i++) {
+                console.log('done' + i);
+		         $( "#done" ).append( "<div class='portlet ui-widget ui-widget-content ui-helper-clearfix ui-corner-all'>" + 
+			    "<div class='taskTitle ui-widget-header ui-corner-all'>" +data.done[i].title + "</div>" + 
+			    "<div class='portlet-content'>" + data.done[i].text + "</div>" + 
+			    "<div class='id'>" + data.done[i].id+ "</div>" + 
+	   		    "</div>" );
+                idx = idx+i;
+             }
+        }
+	});
 	// Mise en place des listes Sortables jQueryUI
 	$(function() {
 		$( ".column" ).sortable({
 			connectWith: ".column"
 		});
 		$( ".portlet" ).addClass( "ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" )
-			.find( ".portlet-header" )
-				.addClass( "ui-widget-header ui-corner-all" )
-				.prepend( "<span class='ui-icon ui-icon-minusthick'></span>")
+			.find( ".taskTitle" )
+				.addClass( "ui-widget-header ui-corner-all bite" )
+				.prepend( "<span class='ui-icon ui-icon-minusthick couille'></span>")
 				.end()
 			.find( ".portlet-content" );
 
@@ -53,23 +68,22 @@
 			$( this ).toggleClass( "ui-icon-minusthick" ).toggleClass( "ui-icon-plusthick" );
 			$( this ).parents( ".portlet:first" ).find( ".portlet-content" ).toggle();
 		});
-		
 		// Quand une liste est bougée 
 		$(".column").sortable({
 		    stop: function(event, ui) {
-				// On envoie les données position & texte dans un socket
-				socket.emit('change', { left: ui.position.left, top: ui.position.top, text: ui.item.children().next().text() }  );
-					json = json.todo.portlet.append();
-					console.log(json);
-
+				// On envoie les données position & texte et le titre dans un socket
+                var myId = ui.item.children().next().next().text();	
+                var myTitle = ui.item.children().text();	
+               console.log(myTitle);
+                var myText = ui.item.children().next().text();	
+               console.log('envoi');
+            	var updateData = {"id":myId, "posx" : ui.position.left,"text": myText, title:myTitle}
+				var JSONData = JSON.stringify(updateData);
+                socket.emit(updateData);
 			}		
-
 		});                              
 		$( ".column" ).disableSelection();
-		
 	});
-	
-	
 	// Création d'un nouvel element
 	$(function() {
 		$( "#dialog:ui-dialog" ).dialog( "destroy" );
@@ -78,7 +92,6 @@
 			desc = $( "#desc" ),
 			allFields = $( [] ).add( name ).add( desc ),
 			tips = $( ".validateTips" );
-
 		function updateTips( t ) {
 			tips
 				.text( t )
@@ -97,19 +110,22 @@
 			modal: true,
 			buttons: {
 				"Create a new task": function() {
-
+                        var newIdx = idx + 1;
 						$( "#todo" ).append( "<div class='portlet ui-widget ui-widget-content ui-helper-clearfix ui-corner-all'>" + 
-							"<div class='portlet-header ui-widget-header ui-corner-all'>" + name.val() + "</div>" + 
+							"<div class='taskTitle ui-widget-header ui-corner-all'>" + name.val() + "</div>" + 
 							"<div class='portlet-content'>" + desc.val() + "</div>" + 
+			                "<div class='id'>" + newIdx + "</div>" + 
 						"</div>" );
 						var objJSON = {
 						   	"name" : name.val(), 
 							"desc": desc.val()
 							};
 						var strJSON = encodeURIComponent(JSON.stringify(objJSON));
-						console.log(strJSON);
 						allFields.val( "" );
+				        var updateData = {id: newIdx, posx : "10", title:objJSON.name, text:objJSON.desc}
 						$( this ).dialog( "close" );
+                        socket.emit('envoi newTask');
+                        console.log(updateData);
 				},
 				Cancel: function() {
 					allFields.val( "" );
@@ -155,15 +171,16 @@
 				TO DO
 			</div> 
 
-			<div class="portlet">
-				<div class="portlet-header">Feeds</div>
+			<!--div class="portlet">
+				<div class="taskTitle">Feeds</div>
 				<div class="portlet-content">Lorem ipsum dolor sit amet, consectetuer adipiscing elit</div>
 			</div>
 
 			<div class="portlet">
-				<div class="portlet-header">News</div>
+				<div class="taskTitle">News</div>
 				<div class="portlet-content">Lorem ipsum dolor sit amet, consectetuer adipiscing elit</div>
-			</div>
+			</div!
+			-->
 
 		</div>
 
@@ -171,10 +188,10 @@
 			<div class="title">
 				Doing
 			</div>
-			<div class="portlet">
-				<div class="portlet-header">Shopping</div>
+			<!--div class="portlet">
+				<div class="taskTitle">Shopping</div>
 				<div class="portlet-content">Lorem ipsum dolor sit amet, consectetuer adipiscing elit</div>
-			</div>
+			</div-->
 
 		</div>
 
