@@ -82,27 +82,29 @@ parseJSON('task.json',function(list) {
 
 // Open the websocket connection 
 io.sockets.on('connection', function (socket) {	
+    console.log('connection ouverte');
   	// Envoi le JSON à la creation de la page
 	socket.emit('task',task);
+    console.log('envoi task');
     // REcoit les donnée des nouvelles tâches
     socket.on('newTask', function (data) {
         task = addObj(task,data);
-console.log('newtaskdata');console.log(data);
-     //   var jsonString = JSON.stringify(task); 
+        console.log('newtaskdata');console.log(data);
+        jsonString = JSON.stringify(task); 
+        console.log('new JSON');console.log(jsonString);
         ecritJSON('task2.json', jsonString);
-    console.log('ecrit');
-        socket.emit('task',task);
+        console.log('ecrit new tache');
+        socket.broadcast.emit('task',task);
     });
 	// Recoit les données position & texte du client qd on change la pos
   	socket.on('change', function (data) {
-    // On vire l'ancinne version du tableau
-    console.log('changedata');console.log(data);
-    task = cleanItUp(task, data);
-    task = addObj(task,data);
-    jsonString = JSON.stringify(task); 
-    //ecritJSON('task2.json', jsonString);
-    socket.emit('task',task);
+        // On vire l'ancinne version du tableau
+        console.log('changedata');console.log(data);
+        task = cleanItUp(task, data);
+        task = addObj(task,data);
+        jsonString = JSON.stringify(task); 
+        console.log('changement position');console.log(jsonString);
+        ecritJSON('task2.json', jsonString);
+        socket.broadcast.emit('task',task);
    	}); 
-    ecritJSON('task2.json', jsonString);
-console.log('ecrit');
 });

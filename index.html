@@ -72,14 +72,14 @@ console.log('construit done');
 		$(".column").sortable({
 		    stop: function(event, ui) {
 				// On envoie les données position & texte et le titre dans un socket
-                var myId = ui.item.children().next().next().text();	
-                var myTitle = ui.item.children().text();	
-               console.log(myTitle);
-                var myText = ui.item.children().next().text();	
+                var myId = ui.item.children().next().next().text();
+                var myTitle = ui.item.children().first().text();
+                var myText = ui.item.children().next().first().text();	
                console.log('envoi');
-            	var updateData = {"id":myId, "posx" : ui.position.left,"text": myText, title:myTitle}
+            	var updateData = {"id":myId, "posx" : ui.position.left,"text": myText,'title': myTitle}
+                console.log(updateData);
 				var JSONData = JSON.stringify(updateData);
-                socket.emit(updateData);
+                socket.emit('change',updateData);
 			}		
 		});                              
 		$( ".column" ).disableSelection();
@@ -124,8 +124,8 @@ console.log('construit done');
 						allFields.val( "" );
 				        var updateData = {id: newIdx, posx : "10", title:objJSON.name, text:objJSON.desc}
 						$( this ).dialog( "close" );
-                        socket.emit('envoi newTask');
-                        console.log(updateData);
+                        socket.emit('newTask', updateData);
+                        console.log('emit');console.log(updateData);
 				},
 				Cancel: function() {
 					allFields.val( "" );
