@@ -48,7 +48,7 @@ var cleanItUp = function(myObj,data,callback) {
     var tabdone = myObj.done;
         for( var i=0; i<tabtodo.length; i++) { 
              if(tabtodo[i].id == data.id) {
-console.log('vire todo');     
+                console.log('vire todo');     
                 tabtodo.splice(i,1);
                 console.log(tabtodo);
                 myObj.todo = tabtodo;
@@ -56,14 +56,14 @@ console.log('vire todo');
         }
         for( var i=0; i<tabdone.length; i++) {      
             if(tabdone[i].id == data.id) {
-console.log('vire done');     
+                console.log('vire done');     
                 tabdone.splice(i,1);
                 myObj.done = tabdone;
             }
         }
         for(var i=0; i<tabdoing.length; i++) {      
             if(tabdoing[i].id == data.id) {
-console.log('vire doin');     
+                console.log('vire doin');     
                 tabdoing.splice(i,1);
                 myObj.doing = tabdoing;
             }
