@@ -5,6 +5,7 @@ AngeZanetti- 2011
 
 */
 // import modules
+
 var fs = require('fs');
 var app = require('express').createServer();
 var io = require('socket.io').listen(app);
@@ -48,7 +49,7 @@ var cleanItUp = function(myObj,data,callback) {
     var tabdone = myObj.done;
         for( var i=0; i<tabtodo.length; i++) { 
              if(tabtodo[i].id == data.id) {
-                console.log('vire todo');     
+console.log('vire todo');     
                 tabtodo.splice(i,1);
                 console.log(tabtodo);
                 myObj.todo = tabtodo;
@@ -56,14 +57,14 @@ var cleanItUp = function(myObj,data,callback) {
         }
         for( var i=0; i<tabdone.length; i++) {      
             if(tabdone[i].id == data.id) {
-                console.log('vire done');     
+console.log('vire done');     
                 tabdone.splice(i,1);
                 myObj.done = tabdone;
             }
         }
         for(var i=0; i<tabdoing.length; i++) {      
             if(tabdoing[i].id == data.id) {
-                console.log('vire doin');     
+console.log('vire doin');     
                 tabdoing.splice(i,1);
                 myObj.doing = tabdoing;
             }
@@ -95,6 +96,7 @@ io.sockets.on('connection', function (socket) {
         ecritJSON('task2.json', jsonString);
         console.log('ecrit new tache');
         socket.broadcast.emit('task',task);
+        socket.emit('task',task);
     });
 	// Recoit les données position & texte du client qd on change la pos
   	socket.on('change', function (data) {
@@ -106,5 +108,6 @@ io.sockets.on('connection', function (socket) {
         console.log('changement position');console.log(jsonString);
         ecritJSON('task2.json', jsonString);
         socket.broadcast.emit('task',task);
+        socket.emit('task',task);
    	}); 
 });
